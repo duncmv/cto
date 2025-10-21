@@ -48,6 +48,7 @@ The map constrains panning using a slightly expanded bounding box around Uganda 
 - start: Start production server
 - lint: Run ESLint
 - format: Run Prettier write
+- etl:uganda:fiber: Run Overpass ETL to generate public/data/fiber.geojson
 
 ## Notes
 

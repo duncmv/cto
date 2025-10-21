@@ -1,0 +1,27 @@
+{
+  "type": "FeatureCollection",
+  "name": "uganda_telecom_fiber",
+  "features": [],
+  "metadata": {
+    "generated_at": null,
+    "duration_ms": null,
+    "query": "[out:json][timeout:180];\narea[\"name\"=\"Uganda\"][\"boundary\"=\"administrative\"][\"admin_level\"=\"2\"]->.searchArea;\n(\n  // Fiber optic cables (lines)\n  way[\"cable\"=\"telecom\"][\"cable:medium\"~\"(?i)fibre|fiber\"](area.searchArea);\n  relation[\"cable\"=\"telecom\"][\"cable:medium\"~\"(?i)fibre|fiber\"](area.searchArea);\n  way[\"communication:line\"][\"communication:medium\"~\"(?i)fibre|fiber\"](area.searchArea);\n  relation[\"communication:line\"][\"communication:medium\"~\"(?i)fibre|fiber\"](area.searchArea);\n\n  // Telecom points of presence\n  node[\"telecom\"~\"^(exchange|distribution_point|data_center)$\"](area.searchArea);\n  node[\"man_made\"=\"street_cabinet\"][\"telecom\"](area.searchArea);\n  node[\"man_made\"=\"utility_pole\"][\"utility\"=\"telecom\"](area.searchArea);\n);\nout body geom qt;",
+    "source": "Overpass API",
+    "endpoints": [
+      "https://overpass.kumi.systems/api/interpreter",
+      "https://overpass-api.de/api/interpreter",
+      "https://overpass.openstreetmap.fr/api/interpreter",
+      "https://overpass.openstreetmap.ru/api/interpreter"
+    ],
+    "description": "Telecom fiber ETL for Uganda. Includes ways/relations tagged as cable=telecom with cable:medium=fibre/fiber or communication:line with communication:medium=fibre/fiber, and telecom nodes such as exchanges and distribution points.",
+    "assumptions": [
+      "Fiber optic lines are tagged either as cable=telecom + cable:medium=fibre/fiber or communication:line + communication:medium=fibre/fiber in OSM.",
+      "Telecom points of presence are represented by nodes with telecom=exchange|distribution_point|data_center, street cabinets with man_made=street_cabinet + telecom=*, and poles with man_made=utility_pole + utility=telecom.",
+      "Not all real-world fiber may be mapped; coverage depends on OSM contributions.",
+      "Geometry for ways/relations is derived using out geom; relations are simplified to (Multi)LineString by concatenating member way geometries."
+    ],
+    "licence": "Open Database License (ODbL) v1.0",
+    "attribution": "© OpenStreetMap contributors",
+    "raw_cache_path": null
+  }
+}

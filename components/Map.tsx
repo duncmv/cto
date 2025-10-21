@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl, { Map as MLMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { getMapStyle, getStyleLabel, KAMPALA_CENTER, UGANDA_BOUNDS } from "@/lib/mapConfig";
+import Legend from "@/components/Legend";
 
 const MAX_BOUNDS_PADDING_DEG = 0.5; // allow a little pan leeway around Uganda
 
@@ -101,6 +102,118 @@ export default function Map() {
     return { type: "FeatureCollection", name: schoolsData.name, features: out };
   }, [schoolsData, searchQuery, selectedRegions, selectedOwnerships, selectedGenders]);
 
+  // Add schools source + layers on demand
+  const addSchoolsLayers = (json: SchoolFeatureCollection) => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (map.getSource("schools")) return;
+
+    map.addSource("schools", {
+      type: "geojson",
+      data: json,
+      cluster: true,
+      clusterMaxZoom: 14,
+      clusterRadius: 50,
+    } as any);
+
+    map.addLayer({
+      id: LAYER_IDS.schoolClusters,
+      type: "circle",
+      source: "schools",
+      filter: ["has", "point_count"],
+      layout: { visibility: schoolsVisible ? "visible" : "none" },
+      paint: {
+        "circle-color": [
+          "step",
+          ["get", "point_count"],
+          "#90cdf4",
+          5,
+          "#63b3ed",
+          15,
+          "#4299e1",
+          25,
+          "#3182ce",
+        ],
+        "circle-radius": [
+          "step",
+          ["get", "point_count"],
+          16,
+          5,
+          20,
+          15,
+          24,
+          25,
+          28,
+        ],
+        "circle-stroke-color": "#1e3a8a",
+        "circle-stroke-width": 1,
+        "circle-opacity": 0.85,
+      },
+    });
+
+    map.addLayer({
+      id: LAYER_IDS.schoolClusterCount,
+      type: "symbol",
+      source: "schools",
+      filter: ["has", "point_count"],
+      layout: {
+        visibility: schoolsVisible ? "visible" : "none",
+        "text-field": ["get", "point_count_abbreviated"],
+        "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
+        "text-size": 12,
+      },
+      paint: { "text-color": "#0c4a6e" },
+    });
+
+    map.addLayer({
+      id: LAYER_IDS.schoolUnclustered,
+      type: "circle",
+      source: "schools",
+      filter: ["!", ["has", "point_count"]],
+      layout: { visibility: schoolsVisible ? "visible" : "none" },
+      paint: {
+        "circle-color": "#16a34a",
+        "circle-radius": 6,
+        "circle-stroke-color": "#064e3b",
+        "circle-stroke-width": 1,
+        "circle-opacity": 0.9,
+      },
+    });
+
+    map.on("click", LAYER_IDS.schoolClusters, (e) => {
+      const feature = e.features && (e.features[0] as any);
+      const clusterId = feature?.properties?.cluster_id as number | undefined;
+      if (typeof clusterId === "number") {
+        const src = map.getSource("schools") as any;
+        if (src && typeof src.getClusterExpansionZoom === "function") {
+          src.getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
+            if (err) return;
+            map.easeTo({ center: e.lngLat, zoom });
+          });
+        }
+      }
+    });
+    map.on("mouseenter", LAYER_IDS.schoolClusters, () => (map.getCanvas().style.cursor = "pointer"));
+    map.on("mouseleave", LAYER_IDS.schoolClusters, () => (map.getCanvas().style.cursor = ""));
+
+    map.on("click", LAYER_IDS.schoolUnclustered, (e) => {
+      const f = e.features && (e.features[0] as any);
+      const p: SchoolProps = f?.properties || ({} as any);
+      const html = `
+        <div style="min-width:240px">
+          <div style="font-weight:600;margin-bottom:4px;">${p.name || "School"}</div>
+          <div><strong>Region:</strong> ${p.region || "—"}</div>
+          <div><strong>Ownership:</strong> ${p.ownership || "—"}</div>
+          <div><strong>Gender:</strong> ${p.gender || "—"}</div>
+          ${p.level ? `<div><strong>Level:</strong> ${p.level}</div>` : ""}
+        </div>
+      `;
+      new maplibregl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
+    });
+    map.on("mouseenter", LAYER_IDS.schoolUnclustered, () => (map.getCanvas().style.cursor = "pointer"));
+    map.on("mouseleave", LAYER_IDS.schoolUnclustered, () => (map.getCanvas().style.cursor = ""));
+  };
+
   // Initialize map
   useEffect(() => {
     if (!containerRef.current) return;
@@ -169,127 +282,24 @@ export default function Map() {
       map.on("mouseenter", LAYER_IDS.fiberLines, () => (map.getCanvas().style.cursor = "pointer"));
       map.on("mouseleave", LAYER_IDS.fiberLines, () => (map.getCanvas().style.cursor = ""));
 
-      // Load schools dataset and add clustered source + layers
-      fetch("/data/schools.geojson")
-        .then((r) => r.json())
-        .then((json: SchoolFeatureCollection) => {
-          setSchoolsData(json);
-
-          map.addSource("schools", {
-            type: "geojson",
-            data: json,
-            cluster: true,
-            clusterMaxZoom: 14,
-            clusterRadius: 50,
-          } as any);
-
-          // Clusters
-          map.addLayer({
-            id: LAYER_IDS.schoolClusters,
-            type: "circle",
-            source: "schools",
-            filter: ["has", "point_count"],
-            layout: { visibility: schoolsVisible ? "visible" : "none" },
-            paint: {
-              // Color clusters by size
-              "circle-color": [
-                "step",
-                ["get", "point_count"],
-                "#90cdf4",
-                5,
-                "#63b3ed",
-                15,
-                "#4299e1",
-                25,
-                "#3182ce",
-              ],
-              "circle-radius": [
-                "step",
-                ["get", "point_count"],
-                16,
-                5,
-                20,
-                15,
-                24,
-                25,
-                28,
-              ],
-              "circle-stroke-color": "#1e3a8a",
-              "circle-stroke-width": 1,
-              "circle-opacity": 0.85,
-            },
+      // Prefetch schools data during idle time and add layers when available
+      const idlePrefetch = () => {
+        import("@/lib/dataLoader")
+          .then(({ getSchoolsData }) => getSchoolsData())
+          .then((json) => {
+            setSchoolsData((prev) => prev || json);
+            addSchoolsLayers(json);
+          })
+          .catch((err) => {
+            // eslint-disable-next-line no-console
+            console.error("Failed to load schools dataset:", err);
           });
-
-          // Cluster count labels
-          map.addLayer({
-            id: LAYER_IDS.schoolClusterCount,
-            type: "symbol",
-            source: "schools",
-            filter: ["has", "point_count"],
-            layout: {
-              visibility: schoolsVisible ? "visible" : "none",
-              "text-field": ["get", "point_count_abbreviated"],
-              "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-              "text-size": 12,
-            },
-            paint: { "text-color": "#0c4a6e" },
-          });
-
-          // Unclustered points
-          map.addLayer({
-            id: LAYER_IDS.schoolUnclustered,
-            type: "circle",
-            source: "schools",
-            filter: ["!", ["has", "point_count"]],
-            layout: { visibility: schoolsVisible ? "visible" : "none" },
-            paint: {
-              "circle-color": "#16a34a",
-              "circle-radius": 6,
-              "circle-stroke-color": "#064e3b",
-              "circle-stroke-width": 1,
-              "circle-opacity": 0.9,
-            },
-          });
-
-          // Interactions for clusters
-          map.on("click", LAYER_IDS.schoolClusters, (e) => {
-            const feature = e.features && (e.features[0] as any);
-            const clusterId = feature?.properties?.cluster_id as number | undefined;
-            if (typeof clusterId === "number") {
-              const src = map.getSource("schools") as any;
-              if (src && typeof src.getClusterExpansionZoom === "function") {
-                src.getClusterExpansionZoom(clusterId, (err: any, zoom: number) => {
-                  if (err) return;
-                  map.easeTo({ center: e.lngLat, zoom });
-                });
-              }
-            }
-          });
-          map.on("mouseenter", LAYER_IDS.schoolClusters, () => (map.getCanvas().style.cursor = "pointer"));
-          map.on("mouseleave", LAYER_IDS.schoolClusters, () => (map.getCanvas().style.cursor = ""));
-
-          // Interactions for unclustered points
-          map.on("click", LAYER_IDS.schoolUnclustered, (e) => {
-            const f = e.features && (e.features[0] as any);
-            const p: SchoolProps = f?.properties || ({} as any);
-            const html = `
-              <div style="min-width:240px">
-                <div style="font-weight:600;margin-bottom:4px;">${p.name || "School"}</div>
-                <div><strong>Region:</strong> ${p.region || "—"}</div>
-                <div><strong>Ownership:</strong> ${p.ownership || "—"}</div>
-                <div><strong>Gender:</strong> ${p.gender || "—"}</div>
-                ${p.level ? `<div><strong>Level:</strong> ${p.level}</div>` : ""}
-              </div>
-            `;
-            new maplibregl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
-          });
-          map.on("mouseenter", LAYER_IDS.schoolUnclustered, () => (map.getCanvas().style.cursor = "pointer"));
-          map.on("mouseleave", LAYER_IDS.schoolUnclustered, () => (map.getCanvas().style.cursor = ""));
-        })
-        .catch((err) => {
-          // eslint-disable-next-line no-console
-          console.error("Failed to load schools dataset:", err);
-        });
+      };
+      if (typeof (window as any).requestIdleCallback === "function") {
+        (window as any).requestIdleCallback(idlePrefetch, { timeout: 2000 });
+      } else {
+        setTimeout(idlePrefetch, 400);
+      }
     });
 
     mapRef.current = map;
@@ -330,6 +340,21 @@ export default function Map() {
     setLayerVisibility(LAYER_IDS.schoolClusters, checked);
     setLayerVisibility(LAYER_IDS.schoolClusterCount, checked);
     setLayerVisibility(LAYER_IDS.schoolUnclustered, checked);
+    if (checked && mapRef.current && !mapRef.current.getSource("schools")) {
+      import("@/lib/dataLoader")
+        .then(({ getSchoolsData }) => getSchoolsData())
+        .then((json) => {
+          setSchoolsData((prev) => prev || json);
+          addSchoolsLayers(json);
+          setLayerVisibility(LAYER_IDS.schoolClusters, true);
+          setLayerVisibility(LAYER_IDS.schoolClusterCount, true);
+          setLayerVisibility(LAYER_IDS.schoolUnclustered, true);
+        })
+        .catch((err) => {
+          // eslint-disable-next-line no-console
+          console.error("Failed to load schools dataset:", err);
+        });
+    }
   };
 
   const toggleSetValue = (current: Set<string>, value: string) => {
@@ -349,6 +374,7 @@ export default function Map() {
   return (
     <div className="map-wrapper">
       <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+
       <div className="control-panel" role="region" aria-label="Map controls">
         <h2>Map Controls</h2>
         <div className="row" style={{ marginBottom: 8, flexWrap: "wrap" }}>
@@ -376,21 +402,17 @@ export default function Map() {
           </label>
         </div>
 
-        <div style={{ borderTop: "1px solid #e2e8f0", margin: "8px 0", height: 0 }} />
+        <div className="hr" />
 
         <div className="row" style={{ marginBottom: 10 }}>
           <input
+            className="input"
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search schools by name..."
             aria-label="Search schools by name"
-            style={{
-              flex: 1,
-              border: "1px solid #cbd5e1",
-              borderRadius: 8,
-              padding: "8px 10px",
-            }}
+            style={{ flex: 1 }}
           />
           <button className="button" onClick={clearFilters} aria-label="Clear filters">
             Clear
@@ -399,8 +421,8 @@ export default function Map() {
 
         {/* Filters */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8 }}>
-          <fieldset style={{ border: "1px solid #e2e8f0", borderRadius: 8, padding: 8 }}>
-            <legend style={{ fontSize: 12, color: "#475569" }}>Region</legend>
+          <fieldset className="fieldset">
+            <legend>Region</legend>
             {filterOptions.regions.map((v) => (
               <label key={v} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                 <input
@@ -412,8 +434,8 @@ export default function Map() {
               </label>
             ))}
           </fieldset>
-          <fieldset style={{ border: "1px solid #e2e8f0", borderRadius: 8, padding: 8 }}>
-            <legend style={{ fontSize: 12, color: "#475569" }}>Ownership</legend>
+          <fieldset className="fieldset">
+            <legend>Ownership</legend>
             {filterOptions.ownerships.map((v) => (
               <label key={v} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                 <input
@@ -425,8 +447,8 @@ export default function Map() {
               </label>
             ))}
           </fieldset>
-          <fieldset style={{ border: "1px solid #e2e8f0", borderRadius: 8, padding: 8 }}>
-            <legend style={{ fontSize: 12, color: "#475569" }}>Gender</legend>
+          <fieldset className="fieldset">
+            <legend>Gender</legend>
             {filterOptions.genders.map((v) => (
               <label key={v} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                 <input
@@ -445,6 +467,8 @@ export default function Map() {
           {schoolsData ? ` • ${filteredSchools?.features.length ?? 0} / ${schoolsData.features.length} schools` : ""}
         </div>
       </div>
+
+      <Legend fiberVisible={fiberVisible} schoolsVisible={schoolsVisible} />
     </div>
   );
 }

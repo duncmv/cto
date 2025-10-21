@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export const metadata: Metadata = {
   title: 'Uganda Map – MapLibre + Next.js',
@@ -10,6 +11,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        {/* Apply saved or preferred theme before paint to avoid FOUC */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();",
+          }}
+        />
         <header className="site-header">
           <div className="container">
             <h1 className="site-title">Uganda Map</h1>
@@ -30,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               >
                 Next.js
               </a>
+              <ThemeToggle />
             </nav>
           </div>
         </header>

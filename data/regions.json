@@ -1,0 +1,8 @@
+{
+  "mappings": [
+    { "region": "Central", "districts": ["Kampala", "Wakiso", "Mukono", "Masaka", "Luweero", "Kayunga", "Mityana", "Mpigi"] },
+    { "region": "Eastern", "districts": ["Jinja", "Mbale", "Soroti", "Tororo", "Iganga", "Bugiri", "Kapchorwa", "Bududa"] },
+    { "region": "Northern", "districts": ["Gulu", "Lira", "Arua", "Kitgum", "Pader", "Nebbi", "Amuru", "Nwoya"] },
+    { "region": "Western", "districts": ["Mbarara", "Hoima", "Kabarole", "Kabale", "Kasese", "Kisoro", "Bushenyi", "Ntungamo"] }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "type": "FeatureCollection",
+  "name": "uganda_schools_sample",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [32.5825, 0.3476] },
+      "properties": {
+        "id": "SCH-UG-0001",
+        "name": "Kampala Central Secondary School",
+        "region": "Central",
+        "ownership": "Government",
+        "gender": "Mixed",
+        "level": "Secondary"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [33.203, 0.447] },
+      "properties": {
+        "id": "SCH-UG-0002",
+        "name": "Jinja Girls High School",
+        "region": "Eastern",
+        "ownership": "Private",
+        "gender": "Girls",
+        "level": "Secondary"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [32.291, 2.775] },
+      "properties": {
+        "id": "SCH-UG-0003",
+        "name": "Gulu Boys Primary School",
+        "region": "Northern",
+        "ownership": "Government",
+        "gender": "Boys",
+        "level": "Primary"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [30.658, -0.607] },
+      "properties": {
+        "id": "SCH-UG-0004",
+        "name": "Mbarara Mixed Primary School",
+        "region": "Western",
+        "ownership": "Community",
+        "gender": "Mixed",
+        "level": "Primary"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [30.911, 3.02] },
+      "properties": {
+        "id": "SCH-UG-0005",
+        "name": "Arua Private Academy",
+        "region": "Northern",
+        "ownership": "Private",
+        "gender": "Mixed",
+        "level": "Primary"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [34.171, 1.082] },
+      "properties": {
+        "id": "SCH-UG-0006",
+        "name": "Mbale Government High",
+        "region": "Eastern",
+        "ownership": "Government",
+        "gender": "Mixed",
+        "level": "Secondary"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [30.275, 0.662] },
+      "properties": {
+        "id": "SCH-UG-0007",
+        "name": "Fort Portal Girls School",
+        "region": "Western",
+        "ownership": "Government",
+        "gender": "Girls",
+        "level": "Secondary"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [31.734, -0.334] },
+      "properties": {
+        "id": "SCH-UG-0008",
+        "name": "Masaka Boys College",
+        "region": "Central",
+        "ownership": "Private",
+        "gender": "Boys",
+        "level": "Secondary"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [32.909, 2.249] },
+      "properties": {
+        "id": "SCH-UG-0009",
+        "name": "Lira Mixed Primary",
+        "region": "Northern",
+        "ownership": "Community",
+        "gender": "Mixed",
+        "level": "Primary"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [32.48, 0.06] },
+      "properties": {
+        "id": "SCH-UG-0010",
+        "name": "Entebbe International School",
+        "region": "Central",
+        "ownership": "Private",
+        "gender": "Mixed",
+        "level": "All-through"
+      }
+    }
+  ]
+}

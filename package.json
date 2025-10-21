@@ -9,6 +9,7 @@
     "lint": "next lint",
     "format": "prettier --write .",
     "build:schools": "node scripts/build-schools.js"
+    "etl:uganda:fiber": "node scripts/uganda_fiber_etl.js"
   },
   "dependencies": {
     "maplibre-gl": "^4.5.0",

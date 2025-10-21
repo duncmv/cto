@@ -29,3 +29,6 @@ coverage
 
 # Data caches
 /data/raw/*.json
+
+# Vercel local project config
+.vercel

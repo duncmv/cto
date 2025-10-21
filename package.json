@@ -8,8 +8,15 @@
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
-    "build:schools": "node scripts/build-schools.js"
-    "etl:uganda:fiber": "node scripts/uganda_fiber_etl.js"
+    "type-check": "tsc --pretty --noEmit",
+    "build:schools": "node scripts/build-schools.js",
+    "etl:uganda:fiber": "node scripts/uganda_fiber_etl.js",
+    "data:refresh": "npm run build:schools && npm run etl:uganda:fiber",
+    "vercel:dev": "vercel dev",
+    "vercel:link": "vercel link --yes",
+    "vercel:pull-env": "vercel env pull .env.local",
+    "deploy:preview": "vercel --confirm",
+    "deploy:prod": "vercel --prod --confirm"
   },
   "dependencies": {
     "maplibre-gl": "^4.5.0",
@@ -24,6 +31,10 @@
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.12",
     "prettier": "^3.3.3",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "vercel": "^34.2.7"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
